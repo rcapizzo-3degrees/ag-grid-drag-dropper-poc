@@ -1,46 +1,77 @@
-<html>
-    <head>
-        <script src="https://cdn.jsdelivr.net/npm/ag-grid-community/dist/ag-grid-community.min.js"></script>
-        
-        <link href="style.css" rel="stylesheet" />
-    </head>
-    <body>
-        <div class="example-wrapper ag-theme-quartz">
-            <div class="inner-col">
-                <div class="toolbar">
-                    <button class="factory factory-red" data-color="Red" data-side="left">
-                        <i class="far fa-plus-square"></i>Add Red
-                    </button>
-                    <button class="factory factory-green" data-color="Green" data-side="left">
-                        <i class="far fa-plus-square"></i>Add Green
-                    </button>
-                    <button class="factory factory-blue" data-color="Blue" data-side="left">
-                        <i class="far fa-plus-square"></i>Add Blue
-                    </button>
-                </div>
-                <div id="eLeftGrid" style="height: 100%" class="inner-col"></div>
-            </div>
-        
-            <div class="inner-col vertical-toolbar">
-                <span class="bin">
-                    <i class="far fa-trash-alt fa-3x"></i>
-                </span>
-            </div>
-            <div class="inner-col">
-                <div class="toolbar">
-                    <button class="factory factory-red" data-color="Red" data-side="right">
-                        <i class="far fa-plus-square"></i>Add Red
-                    </button>
-                    <button class="factory factory-green" data-color="Green" data-side="right">
-                        <i class="far fa-plus-square"></i>Add Green
-                    </button>
-                    <button class="factory factory-blue" data-color="Blue" data-side="right">
-                        <i class="far fa-plus-square"></i>Add Blue
-                    </button>
-                </div>
-                <div id="eRightGrid" style="height: 100%" class="inner-col"></div>
-            </div>
-        </div>
-    </body>
-    <script src="main.js" type="text/javascript"></script>
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>JavaScript Example - Row Dragging - Simple Unmanaged</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style media="only screen">
+      :root,
+      body {
+        height: 100%;
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      html {
+        position: absolute;
+        top: 0;
+        left: 0;
+        padding: 0;
+        overflow: auto;
+        font-family: -apple-system, "system-ui", "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif,
+          "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+          "Noto Color Emoji";
+      }
+
+      body {
+        padding: 16px;
+        overflow: auto;
+        background-color: transparent;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="myGrid" style="height: 100%" class="ag-theme-quartz"></div>
+    <script>
+      (function () {
+        const appLocation =
+          "/examples/row-dragging/simple-unmanaged/packages/vanilla";
+
+        window.__basePath = appLocation;
+      })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ag-grid-community@32.1.0/dist/ag-grid-community.js?t=1723109094447"></script>
+    <script src="/data.js"></script>
+    <script src="/main.js"></script>
+    <script>
+      (function () {
+        const pageName = "row-dragging";
+        const exampleName = "simple-unmanaged";
+        const initSelector = ".ag-root-wrapper";
+
+        const checkInit = function () {
+          if (document.querySelector(initSelector)) {
+            const loadedEvent = {
+              type: "init",
+              pageName,
+              exampleName,
+            };
+            window.parent?.postMessage(loadedEvent);
+          } else {
+            requestAnimationFrame(() => checkInit());
+          }
+        };
+
+        checkInit();
+      })();
+    </script>
+  </body>
 </html>

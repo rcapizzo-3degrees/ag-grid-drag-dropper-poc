@@ -1,206 +1,110 @@
-var rowIdSequence = 100;
+var immutableStore = getData();
 
-var leftColumnDefs = [
-  { field: "id", rowDrag: true },
-  { field: "color" },
-  { field: "value1" },
-  { field: "value2" },
-];
+let gridApi;
 
-var rightColumnDefs = [
-  { field: "id", rowDrag: true },
-  { field: "color" },
-  { field: "value1" },
-  { field: "value2" },
-];
-var leftApi;
-var leftGridOptions = {
+const gridOptions = {
+  columnDefs: [
+    { field: "athlete", rowDrag: true },
+    { field: "country" },
+    { field: "year", width: 100 },
+    { field: "date" },
+    { field: "sport" },
+    { field: "gold" },
+    { field: "silver" },
+    { field: "bronze" },
+  ],
   defaultColDef: {
-    flex: 1,
-    minWidth: 100,
+    width: 170,
     filter: true,
   },
-  rowClassRules: {
-    "red-row": 'data.color == "Red"',
-    "green-row": 'data.color == "Green"',
-    "blue-row": 'data.color == "Blue"',
-  },
-  getRowId: (params) => {
-    return String(params.data.id);
-  },
-  rowData: createLeftRowData(),
-  rowDragManaged: false,
-  suppressMoveWhenRowDragging: true,
-  columnDefs: leftColumnDefs,
-//   onGridReady: (params) => {
-//     addBinZone(params);
-//     addGridDropZone(params, "Right");
-//   },
-};
-var rightApi;
-var rightGridOptions = {
-  defaultColDef: {
-    flex: 1,
-    minWidth: 100,
-    filter: true,
-  },
-  rowClassRules: {
-    "red-row": 'data.color == "Red"',
-    "green-row": 'data.color == "Green"',
-    "blue-row": 'data.color == "Blue"',
-  },
-  getRowId: (params) => {
-    return String(params.data.id);
-  },
-  rowData: [],
-  rowDragManaged: false,
-  suppressMoveWhenRowDragging: true,
-  columnDefs: rightColumnDefs,
-  onRowDragEnter: onRowDragEnter,
-  onRowDragEnd: onRowDragEnd,
+  // this tells the grid we are doing updates when setting new data
   onRowDragMove: onRowDragMove,
-  onRowDragLeave: onRowDragLeave,
-//   onGridReady: (params) => {
-//     addBinZone(params);
-//     addGridDropZone(params, "Left");
-//   },
+  getRowId: getRowId,
+  onSortChanged: onSortChanged,
+  onFilterChanged: onFilterChanged,
+  onGridReady: (params) => {
+    // add id to each item, needed for immutable store to work
+    immutableStore.forEach(function (data, index) {
+      data.id = index;
+    });
+
+    params.api.setGridOption("rowData", immutableStore);
+  },
 };
 
-function onRowDragEnter(e) {
-    console.log("onRowDragEnter", e);
-  }
-  
-  function onRowDragEnd(e) {
-    console.log("onRowDragEnd", e);
-  }
-  
-  function onRowDragMove(e) {
-    console.log("onRowDragMove", e);
-  }
-  
-  function onRowDragLeave(e) {
-    console.log("onRowDragLeave", e);
-  }
+var sortActive = false;
+var filterActive = false;
 
-function createLeftRowData() {
-  return ["Red", "Green", "Blue"].map(function (color) {
-    return createDataItem(color);
-  });
+// listen for change on sort changed
+function onSortChanged() {
+  var colState = gridApi.getColumnState() || [];
+  sortActive = colState.some((c) => c.sort);
+  // suppress row drag if either sort or filter is active
+  var suppressRowDrag = sortActive || filterActive;
+  console.log(
+    "sortActive = " +
+      sortActive +
+      ", filterActive = " +
+      filterActive +
+      ", allowRowDrag = " +
+      suppressRowDrag,
+  );
+  gridApi.setGridOption("suppressRowDrag", suppressRowDrag);
 }
 
-function createDataItem(color) {
-  return {
-    id: rowIdSequence++,
-    color: color,
-    value1: Math.floor(Math.random() * 100),
-    value2: Math.floor(Math.random() * 100),
-  };
+// listen for changes on filter changed
+function onFilterChanged() {
+  filterActive = gridApi.isAnyFilterPresent();
+  // suppress row drag if either sort or filter is active
+  var suppressRowDrag = sortActive || filterActive;
+  console.log(
+    "sortActive = " +
+      sortActive +
+      ", filterActive = " +
+      filterActive +
+      ", allowRowDrag = " +
+      suppressRowDrag,
+  );
+  gridApi.setGridOption("suppressRowDrag", suppressRowDrag);
 }
 
-function addRecordToGrid(side, data) {
-  // if data missing or data has no it, do nothing
-  if (!data || data.id == null) {
-    return;
+function getRowId(params) {
+  return String(params.data.id);
+}
+
+function onRowDragMove(event) {
+    console.log(event);
+  var movingNode = event.node;
+  var overNode = event.overNode;
+
+  var rowNeedsToMove = movingNode !== overNode;
+
+  if (rowNeedsToMove) {
+    // the list of rows we have is data, not row nodes, so extract the data
+    var movingData = movingNode.data;
+    var overData = overNode.data;
+
+    var fromIndex = immutableStore.indexOf(movingData);
+    var toIndex = immutableStore.indexOf(overData);
+
+    var newStore = immutableStore.slice();
+    moveInArray(newStore, fromIndex, toIndex);
+
+    immutableStore = newStore;
+    gridApi.setGridOption("rowData", newStore);
+``
+    gridApi.clearFocusedCell();
   }
 
-  var gridApi = side === "left" ? leftApi : rightApi,
-    // do nothing if row is already in the grid, otherwise we would have duplicates
-    rowAlreadyInGrid = !!gridApi.getRowNode(data.id),
-    transaction;
-
-  if (rowAlreadyInGrid) {
-    console.log("not adding row to avoid duplicates in the grid");
-    return;
-  }
-
-  transaction = {
-    add: [data],
-  };
-
-  gridApi.applyTransaction(transaction);
-}
-
-function onFactoryButtonClick(e) {
-  var button = e.currentTarget,
-    buttonColor = button.getAttribute("data-color"),
-    side = button.getAttribute("data-side"),
-    data = createDataItem(buttonColor);
-
-  addRecordToGrid(side, data);
-}
-
-function binDrop(data) {
-  // if data missing or data has no id, do nothing
-  if (!data || data.id == null) {
-    return;
-  }
-
-  var transaction = {
-    remove: [data],
-  };
-
-  [leftApi, rightApi].forEach((api) => {
-    var rowsInGrid = !!api.getRowNode(data.id);
-
-    if (rowsInGrid) {
-      api.applyTransaction(transaction);
-    }
-  });
-}
-
-function addBinZone(params) {
-  var eBin = document.querySelector(".bin"),
-    icon = eBin.querySelector("i"),
-    dropZone = {
-      getContainer: () => {
-        return eBin;
-      },
-      onDragEnter: () => {
-        eBin.style.color = "blue";
-        icon.style.transform = "scale(1.5)";
-      },
-      onDragLeave: () => {
-        eBin.style.color = "black";
-        icon.style.transform = "scale(1)";
-      },
-      onDragStop: (dragStopParams) => {
-        binDrop(dragStopParams.node.data);
-        eBin.style.color = "black";
-        icon.style.transform = "scale(1)";
-      },
-    };
-
-  params.api.addRowDropZone(dropZone);
-}
-
-function addGridDropZone(params, side) {
-  var grid = document.querySelector("#e" + side + "Grid"),
-    dropZone = {
-      getContainer: () => {
-        return grid;
-      },
-      onDragStop: (params) => {
-        addRecordToGrid(side.toLowerCase(), params.node.data);
-      },
-    };
-
-  params.api.addRowDropZone(dropZone);
-}
-
-function loadGrid(side) {
-  var grid = document.querySelector("#e" + side + "Grid");
-  if (side === "Left") {
-    leftApi = agGrid.createGrid(grid, leftGridOptions);
-  } else {
-    rightApi = agGrid.createGrid(grid, rightGridOptions);
+  function moveInArray(arr, fromIndex, toIndex) {
+    var element = arr[fromIndex];
+    arr.splice(fromIndex, 1);
+    arr.splice(toIndex, 0, element);
   }
 }
 
-var buttons = document.querySelectorAll("button.factory");
-
-for (var i = 0; i < buttons.length; i++) {
-  buttons[i].addEventListener("click", onFactoryButtonClick);
-}
-
-loadGrid("Left");
-loadGrid("Right");
+// setup the grid after the page has finished loading
+document.addEventListener("DOMContentLoaded", function () {
+  var gridDiv = document.querySelector("#myGrid");
+  gridApi = agGrid.createGrid(gridDiv, gridOptions);
+});
