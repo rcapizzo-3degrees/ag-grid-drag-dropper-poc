@@ -5,42 +5,40 @@
         <link href="style.css" rel="stylesheet" />
     </head>
     <body>
-        <div class="top-container">
-            <div class="example-toolbar panel panel-default">
-                <div class="panel-body">
-                    <input type="radio" id="move" name="radio" checked />
-                    <label for="move">Remove Source Rows</label>
-                    <input type="radio" id="deselect" name="radio" />
-                    <label for="deselect">Only Deselect Source Rows</label>
-                    <input type="radio" id="none" name="radio" />
-                    <label for="none">None</label>
-                    <input type="checkbox" id="toggleCheck" checked />
-                    <label for="toggleCheck">Checkbox Select</label>
-                    <span class="input-group-button">
-                        <button type="button" class="btn btn-default reset" style="margin-left: 5px">
-                            <i class="fas fa-redo" style="margin-right: 5px"></i>Reset
-                        </button>
-                    </span>
+        <div class="example-wrapper ag-theme-quartz">
+            <div class="inner-col">
+                <div class="toolbar">
+                    <button class="factory factory-red" data-color="Red" data-side="left">
+                        <i class="far fa-plus-square"></i>Add Red
+                    </button>
+                    <button class="factory factory-green" data-color="Green" data-side="left">
+                        <i class="far fa-plus-square"></i>Add Green
+                    </button>
+                    <button class="factory factory-blue" data-color="Blue" data-side="left">
+                        <i class="far fa-plus-square"></i>Add Blue
+                    </button>
                 </div>
+                <div id="eLeftGrid" style="height: 100%" class="inner-col"></div>
             </div>
-            <div class="grid-wrapper ag-theme-quartz">
-                
-                
+        
+            <div class="inner-col vertical-toolbar">
+                <span class="bin">
+                    <i class="far fa-trash-alt fa-3x"></i>
+                </span>
             </div>
-        </div>
-        <div class="panel panel-primary ag-theme-quartz" style="margin-right: 10px">
-            <div class="panel-heading">Athletes</div>
-            <div class="panel-body">
-                <div id="eLeftGrid"></div>
-            </div>
-        </div>
-        <div style="border:2px solid black; height:200px; width:100%;">
-            NO DROP ZOONE
-        </div>
-        <div class="panel panel-primary ag-theme-quartz" style="margin-left: 10px">
-            <div class="panel-heading">Selected Athletes</div>
-            <div class="panel-body">
-                <div id="eRightGrid"></div>
+            <div class="inner-col">
+                <div class="toolbar">
+                    <button class="factory factory-red" data-color="Red" data-side="right">
+                        <i class="far fa-plus-square"></i>Add Red
+                    </button>
+                    <button class="factory factory-green" data-color="Green" data-side="right">
+                        <i class="far fa-plus-square"></i>Add Green
+                    </button>
+                    <button class="factory factory-blue" data-color="Blue" data-side="right">
+                        <i class="far fa-plus-square"></i>Add Blue
+                    </button>
+                </div>
+                <div id="eRightGrid" style="height: 100%" class="inner-col"></div>
             </div>
         </div>
     </body>

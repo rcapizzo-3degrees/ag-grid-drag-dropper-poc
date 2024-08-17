@@ -1,185 +1,186 @@
-class SportRenderer {
-    eGui;
-  
-    init(params) {
-      this.eGui = document.createElement("i");
-  
-      this.eGui.addEventListener("click", () => {
-        params.api.applyTransaction({ remove: [params.node.data] });
-      });
-  
-      this.eGui.classList.add("far", "fa-trash-alt");
-      this.eGui.style.cursor = "pointer";
-    }
-  
-    getGui() {
-      return this.eGui;
-    }
-  
-    refresh(params) {
-      return false;
-    }
+var rowIdSequence = 100;
+
+var leftColumnDefs = [
+  { field: "id", rowDrag: true },
+  { field: "color" },
+  { field: "value1" },
+  { field: "value2" },
+];
+
+var rightColumnDefs = [
+  { field: "id", rowDrag: true },
+  { field: "color" },
+  { field: "value1" },
+  { field: "value2" },
+];
+var leftApi;
+var leftGridOptions = {
+  defaultColDef: {
+    flex: 1,
+    minWidth: 100,
+    filter: true,
+  },
+  rowClassRules: {
+    "red-row": 'data.color == "Red"',
+    "green-row": 'data.color == "Green"',
+    "blue-row": 'data.color == "Blue"',
+  },
+  getRowId: (params) => {
+    return String(params.data.id);
+  },
+  rowData: createLeftRowData(),
+  rowDragManaged: true,
+  suppressMoveWhenRowDragging: true,
+  columnDefs: leftColumnDefs,
+  onGridReady: (params) => {
+    addBinZone(params);
+    addGridDropZone(params, "Right");
+  },
+};
+var rightApi;
+var rightGridOptions = {
+  defaultColDef: {
+    flex: 1,
+    minWidth: 100,
+    filter: true,
+  },
+  rowClassRules: {
+    "red-row": 'data.color == "Red"',
+    "green-row": 'data.color == "Green"',
+    "blue-row": 'data.color == "Blue"',
+  },
+  getRowId: (params) => {
+    return String(params.data.id);
+  },
+  rowData: [],
+  rowDragManaged: true,
+  suppressMoveWhenRowDragging: true,
+  columnDefs: rightColumnDefs,
+  onGridReady: (params) => {
+    addBinZone(params);
+    addGridDropZone(params, "Left");
+  },
+};
+
+function createLeftRowData() {
+  return ["Red", "Green", "Blue"].map(function (color) {
+    return createDataItem(color);
+  });
+}
+
+function createDataItem(color) {
+  return {
+    id: rowIdSequence++,
+    color: color,
+    value1: Math.floor(Math.random() * 100),
+    value2: Math.floor(Math.random() * 100),
+  };
+}
+
+function addRecordToGrid(side, data) {
+  // if data missing or data has no it, do nothing
+  if (!data || data.id == null) {
+    return;
   }
-  
-  const leftColumnDefs = [
-    {
-      rowDrag: true,
-      maxWidth: 50,
-      suppressHeaderMenuButton: true,
-      suppressHeaderFilterButton: true,
-      rowDragText: (params, dragItemCount) => {
-        if (dragItemCount > 1) {
-          return dragItemCount + " athletes";
-        }
-        return params.rowNode.data.athlete;
-      },
-    },
-    {
-      colId: "checkbox",
-      maxWidth: 50,
-      checkboxSelection: true,
-      suppressHeaderMenuButton: true,
-      suppressHeaderFilterButton: true,
-      headerCheckboxSelection: true,
-    },
-    { field: "athlete" },
-    { field: "sport" },
-  ];
-  
-  const rightColumnDefs = [
-    {
-      rowDrag: true,
-      maxWidth: 50,
-      suppressHeaderMenuButton: true,
-      suppressHeaderFilterButton: true,
-      rowDragText: (params, dragItemCount) => {
-        if (dragItemCount > 1) {
-          return dragItemCount + " athletes";
-        }
-        return params.rowNode.data.athlete;
-      },
-    },
-    { field: "athlete" },
-    { field: "sport" },
-    {
-      suppressHeaderMenuButton: true,
-      suppressHeaderFilterButton: true,
-      maxWidth: 50,
-      cellRenderer: SportRenderer,
-    },
-  ];
-  let leftApi;
-  const leftGridOptions = {
-    defaultColDef: {
-      flex: 1,
-      minWidth: 100,
-      filter: true,
-    },
-    rowSelection: "multiple",
-    rowDragMultiRow: true,
-    suppressRowClickSelection: true,
-    getRowId: (params) => {
-      return params.data.athlete;
-    },
-    rowDragManaged: true,
-    suppressMoveWhenRowDragging: true,
-    columnDefs: leftColumnDefs,
-    onGridReady: (params) => {
-      addGridDropZone(params);
-    },
+
+  var gridApi = side === "left" ? leftApi : rightApi,
+    // do nothing if row is already in the grid, otherwise we would have duplicates
+    rowAlreadyInGrid = !!gridApi.getRowNode(data.id),
+    transaction;
+
+  if (rowAlreadyInGrid) {
+    console.log("not adding row to avoid duplicates in the grid");
+    return;
+  }
+
+  transaction = {
+    add: [data],
   };
-  let rightApi;
-  const rightGridOptions = {
-    defaultColDef: {
-      flex: 1,
-      minWidth: 100,
-      filter: true,
-    },
-    getRowId: (params) => {
-      return params.data.athlete;
-    },
-    rowDragManaged: true,
-    columnDefs: rightColumnDefs,
+
+  gridApi.applyTransaction(transaction);
+}
+
+function onFactoryButtonClick(e) {
+  var button = e.currentTarget,
+    buttonColor = button.getAttribute("data-color"),
+    side = button.getAttribute("data-side"),
+    data = createDataItem(buttonColor);
+
+  addRecordToGrid(side, data);
+}
+
+function binDrop(data) {
+  // if data missing or data has no id, do nothing
+  if (!data || data.id == null) {
+    return;
+  }
+
+  var transaction = {
+    remove: [data],
   };
-  
-  function addGridDropZone(params) {
-    const dropZoneParams = rightApi.getRowDropZoneParams({
+
+  [leftApi, rightApi].forEach((api) => {
+    var rowsInGrid = !!api.getRowNode(data.id);
+
+    if (rowsInGrid) {
+      api.applyTransaction(transaction);
+    }
+  });
+}
+
+function addBinZone(params) {
+  var eBin = document.querySelector(".bin"),
+    icon = eBin.querySelector("i"),
+    dropZone = {
+      getContainer: () => {
+        return eBin;
+      },
+      onDragEnter: () => {
+        eBin.style.color = "blue";
+        icon.style.transform = "scale(1.5)";
+      },
+      onDragLeave: () => {
+        eBin.style.color = "black";
+        icon.style.transform = "scale(1)";
+      },
+      onDragStop: (dragStopParams) => {
+        binDrop(dragStopParams.node.data);
+        eBin.style.color = "black";
+        icon.style.transform = "scale(1)";
+      },
+    };
+
+  params.api.addRowDropZone(dropZone);
+}
+
+function addGridDropZone(params, side) {
+  var grid = document.querySelector("#e" + side + "Grid"),
+    dropZone = {
+      getContainer: () => {
+        return grid;
+      },
       onDragStop: (params) => {
-        const deselectCheck = document.querySelector("input#deselect").checked;
-        const moveCheck = document.querySelector("input#move").checked;
-        const nodes = params.nodes;
-  
-        if (moveCheck) {
-          leftApi.applyTransaction({
-            remove: nodes.map(function (node) {
-              return node.data;
-            }),
-          });
-        } else if (deselectCheck) {
-          leftApi.setNodesSelected({ nodes, newValue: false });
-        }
+        addRecordToGrid(side.toLowerCase(), params.node.data);
       },
-    });
-  
-    params.api.addRowDropZone(dropZoneParams);
+    };
+
+  params.api.addRowDropZone(dropZone);
+}
+
+function loadGrid(side) {
+  var grid = document.querySelector("#e" + side + "Grid");
+  if (side === "Left") {
+    leftApi = agGrid.createGrid(grid, leftGridOptions);
+  } else {
+    rightApi = agGrid.createGrid(grid, rightGridOptions);
   }
-  
-  function loadGrid(options, oldApi, side, data) {
-    const grid = document.querySelector("#e" + side + "Grid");
-  
-    oldApi?.destroy();
-  
-    options.rowData = data;
-    return agGrid.createGrid(grid, options);
-  }
-  
-  function resetInputs() {
-    const inputs = document.querySelectorAll(".example-toolbar input");
-    const checkbox = inputs[inputs.length - 1];
-  
-    if (!checkbox.checked) {
-      checkbox.click();
-    }
-  
-    inputs[0].checked = true;
-  }
-  
-  function loadGrids() {
-    fetch("https://www.ag-grid.com/example-assets/olympic-winners.json")
-      .then((response) => response.json())
-      .then(function (data) {
-        const athletes = [];
-        let i = 0;
-  
-        while (athletes.length < 20 && i < data.length) {
-          const pos = i++;
-          if (
-            athletes.some(function (rec) {
-              return rec.athlete === data[pos].athlete;
-            })
-          ) {
-            continue;
-          }
-          athletes.push(data[pos]);
-        }
-  
-        leftApi = loadGrid(leftGridOptions, leftApi, "Left", athletes);
-        rightApi = loadGrid(rightGridOptions, rightApi, "Right", []);
-      });
-  }
-  
-  const resetBtn = document.querySelector("button.reset");
-  const checkboxToggle = document.querySelector("#toggleCheck");
-  
-  resetBtn.addEventListener("click", () => {
-    resetInputs();
-    loadGrids();
-  });
-  
-  checkboxToggle.addEventListener("change", () => {
-    leftApi.setColumnsVisible(["checkbox"], checkboxToggle.checked);
-    leftApi.setGridOption("suppressRowClickSelection", checkboxToggle.checked);
-  });
-  
-  loadGrids();
-  
+}
+
+var buttons = document.querySelectorAll("button.factory");
+
+for (var i = 0; i < buttons.length; i++) {
+  buttons[i].addEventListener("click", onFactoryButtonClick);
+}
+
+loadGrid("Left");
+loadGrid("Right");
