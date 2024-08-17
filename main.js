@@ -29,13 +29,13 @@ var leftGridOptions = {
     return String(params.data.id);
   },
   rowData: createLeftRowData(),
-  rowDragManaged: true,
+  rowDragManaged: false,
   suppressMoveWhenRowDragging: true,
   columnDefs: leftColumnDefs,
-  onGridReady: (params) => {
-    addBinZone(params);
-    addGridDropZone(params, "Right");
-  },
+//   onGridReady: (params) => {
+//     addBinZone(params);
+//     addGridDropZone(params, "Right");
+//   },
 };
 var rightApi;
 var rightGridOptions = {
@@ -53,14 +53,34 @@ var rightGridOptions = {
     return String(params.data.id);
   },
   rowData: [],
-  rowDragManaged: true,
+  rowDragManaged: false,
   suppressMoveWhenRowDragging: true,
   columnDefs: rightColumnDefs,
-  onGridReady: (params) => {
-    addBinZone(params);
-    addGridDropZone(params, "Left");
-  },
+  onRowDragEnter: onRowDragEnter,
+  onRowDragEnd: onRowDragEnd,
+  onRowDragMove: onRowDragMove,
+  onRowDragLeave: onRowDragLeave,
+//   onGridReady: (params) => {
+//     addBinZone(params);
+//     addGridDropZone(params, "Left");
+//   },
 };
+
+function onRowDragEnter(e) {
+    console.log("onRowDragEnter", e);
+  }
+  
+  function onRowDragEnd(e) {
+    console.log("onRowDragEnd", e);
+  }
+  
+  function onRowDragMove(e) {
+    console.log("onRowDragMove", e);
+  }
+  
+  function onRowDragLeave(e) {
+    console.log("onRowDragLeave", e);
+  }
 
 function createLeftRowData() {
   return ["Red", "Green", "Blue"].map(function (color) {
