@@ -2,15 +2,66 @@ var immutableStore = getData();
 
 let gridApi;
 
+window.addEventListener('storage', () => {
+  
+  const item = window.localStorage.getItem('ITEM');
+  console.log('storage change', item, item > '');
+  gridApi.setColumnsVisible(["DROP_COL"], item > '');
+  gridApi.setColumnsVisible(["DRAG_COL"], item === '');
+
+})
+
+function show_drop_column (e) {
+  console.log(e);
+  gridApi.setColumnsVisible(["DROP_COL"], true);
+  e.preventDefault();
+}
+function hide_drop_column (e) {
+  console.log(e);
+  gridApi.setColumnsVisible(["DROP_COL"], false);
+  e.preventDefault();
+}
+
 const gridOptions = {
   columnDefs: [
     { 
-        field: "athlete", 
+      field: "DROP",
+      colId: "DROP_COL",
+      hide: true,
+
+      cellRenderer: (o) => {
+          
+          const ediv = document.createElement('div');
+          ediv.innerHTML = "drop";
+          ediv.ondrop=(e) =>{
+              e.preventDefault();
+              let x = e.dataTransfer.getData("text");
+              x = JSON.parse(x);
+              //console.log('drop',e, x);
+              console.log('drop', o.data, x);
+              e.currentTarget.style.background = null;
+
+          };
+          ediv.ondragover = (e) => {
+              //console.log('dragover',e)
+              e.currentTarget.style.background = "red";
+              e.preventDefault();
+          };
+          ediv.ondragleave = (e) => {
+              e.currentTarget.style.background = null;
+          }
+          return ediv;
+      }
+   },
+    { 
+        field: "DRAG", 
+        colId: "DRAG_COL",
+        // hide: true,
         // rowDrag: true, 
         cellRenderer: (p) => {
             //console.log(p.data);
             const ediv = document.createElement('div');
-            ediv.innerHTML = p.data.athlete;
+            ediv.innerHTML = "drag";
             ediv.draggable = true;
             ediv.ondragstart = (e) => {
                 e.currentTarget.style.border = "dashed";
@@ -18,41 +69,21 @@ const gridOptions = {
                 e.dataTransfer.setData("text", JSON.stringify(p.data));
 
                 e.effectAllowed = "move";
+
+                window.localStorage.setItem('ITEM', JSON.stringify(p.data));
+
                 console.log('hacked',e);
             };
             
             ediv.ondragend = (e) => {
                 e.currentTarget.style.border = null;
+                window.localStorage.setItem('ITEM','');
                 console.log('dragend',e);
             };
              return ediv;
         } 
     },
-    { 
-        field: "country",
-        cellRenderer: (o) => {
-            
-            const ediv = document.createElement('div');
-            ediv.innerHTML = "drop";
-            ediv.ondrop=(e) =>{
-                e.preventDefault();
-                let x = e.dataTransfer.getData("text");
-                x = JSON.parse(x);
-                //console.log('drop',e, x);
-                console.log('drop', o.data, x);
-                e.currentTarget.style.background = null;
-            };
-            ediv.ondragover = (e) => {
-                //console.log('dragover',e)
-                e.currentTarget.style.background = "red";
-                e.preventDefault();
-            };
-            ediv.ondragleave = (e) => {
-                e.currentTarget.style.background = null;
-            }
-            return ediv;
-        }
-     },
+    { field: "athlete" },
     { field: "year", width: 100 },
     { field: "date" },
     { field: "sport" },
@@ -65,10 +96,10 @@ const gridOptions = {
     filter: true,
   },
   // this tells the grid we are doing updates when setting new data
-  onRowDragMove: onRowDragMove,
-  onRowDragEnter: onRowDragEnter,
-  onRowDragEnd: onRowDragEnd,
-  onRowDragLeave: onRowDragLeave,
+  // onRowDragMove: onRowDragMove,
+  // onRowDragEnter: onRowDragEnter,
+  // onRowDragEnd: onRowDragEnd,
+  // onRowDragLeave: onRowDragLeave,
   onRowClicked: onRowClicked,
   getRowId: getRowId,
   onSortChanged: onSortChanged,
@@ -143,36 +174,36 @@ function getRowId(params) {
   return String(params.data.id);
 }
 
-function onRowDragMove(event) {
-//    console.log(event);
-  var movingNode = event.node;
-  var overNode = event.overNode;
+// function onRowDragMove(event) {
+// //    console.log(event);
+//   var movingNode = event.node;
+//   var overNode = event.overNode;
 
-  var rowNeedsToMove = movingNode !== overNode;
+//   var rowNeedsToMove = movingNode !== overNode;
 
-  if (rowNeedsToMove) {
-    // the list of rows we have is data, not row nodes, so extract the data
-    var movingData = movingNode.data;
-    var overData = overNode.data;
+//   if (rowNeedsToMove) {
+//     // the list of rows we have is data, not row nodes, so extract the data
+//     var movingData = movingNode.data;
+//     var overData = overNode.data;
 
-    var fromIndex = immutableStore.indexOf(movingData);
-    var toIndex = immutableStore.indexOf(overData);
+//     var fromIndex = immutableStore.indexOf(movingData);
+//     var toIndex = immutableStore.indexOf(overData);
 
-    var newStore = immutableStore.slice();
-    moveInArray(newStore, fromIndex, toIndex);
+//     var newStore = immutableStore.slice();
+//     moveInArray(newStore, fromIndex, toIndex);
 
-    immutableStore = newStore;
-    gridApi.setGridOption("rowData", newStore);
-``
-    gridApi.clearFocusedCell();
-  }
+//     immutableStore = newStore;
+//     gridApi.setGridOption("rowData", newStore);
+// ``
+//     gridApi.clearFocusedCell();
+//   }
 
-  function moveInArray(arr, fromIndex, toIndex) {
-    var element = arr[fromIndex];
-    arr.splice(fromIndex, 1);
-    arr.splice(toIndex, 0, element);
-  }
-}
+//   function moveInArray(arr, fromIndex, toIndex) {
+//     var element = arr[fromIndex];
+//     arr.splice(fromIndex, 1);
+//     arr.splice(toIndex, 0, element);
+//   }
+// }
 
 // setup the grid after the page has finished loading
 document.addEventListener("DOMContentLoaded", function () {
