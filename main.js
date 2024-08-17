@@ -4,8 +4,55 @@ let gridApi;
 
 const gridOptions = {
   columnDefs: [
-    { field: "athlete", rowDrag: true },
-    { field: "country" },
+    { 
+        field: "athlete", 
+        // rowDrag: true, 
+        cellRenderer: (p) => {
+            //console.log(p.data);
+            const ediv = document.createElement('div');
+            ediv.innerHTML = p.data.athlete;
+            ediv.draggable = true;
+            ediv.ondragstart = (e) => {
+                e.currentTarget.style.border = "dashed";
+                
+                e.dataTransfer.setData("text", JSON.stringify(p.data));
+
+                e.effectAllowed = "move";
+                console.log('hacked',e);
+            };
+            
+            ediv.ondragend = (e) => {
+                e.currentTarget.style.border = null;
+                console.log('dragend',e);
+            };
+             return ediv;
+        } 
+    },
+    { 
+        field: "country",
+        cellRenderer: (o) => {
+            
+            const ediv = document.createElement('div');
+            ediv.innerHTML = "drop";
+            ediv.ondrop=(e) =>{
+                e.preventDefault();
+                let x = e.dataTransfer.getData("text");
+                x = JSON.parse(x);
+                //console.log('drop',e, x);
+                console.log('drop', o.data, x);
+                e.currentTarget.style.background = null;
+            };
+            ediv.ondragover = (e) => {
+                //console.log('dragover',e)
+                e.currentTarget.style.background = "red";
+                e.preventDefault();
+            };
+            ediv.ondragleave = (e) => {
+                e.currentTarget.style.background = null;
+            }
+            return ediv;
+        }
+     },
     { field: "year", width: 100 },
     { field: "date" },
     { field: "sport" },
@@ -19,6 +66,10 @@ const gridOptions = {
   },
   // this tells the grid we are doing updates when setting new data
   onRowDragMove: onRowDragMove,
+  onRowDragEnter: onRowDragEnter,
+  onRowDragEnd: onRowDragEnd,
+  onRowDragLeave: onRowDragLeave,
+  onRowClicked: onRowClicked,
   getRowId: getRowId,
   onSortChanged: onSortChanged,
   onFilterChanged: onFilterChanged,
@@ -34,6 +85,26 @@ const gridOptions = {
 
 var sortActive = false;
 var filterActive = false;
+
+function onRowClicked(e) {
+    console.log('onRowCLicked',e);
+}
+function onRowDragEnter(e) {
+
+    console.log("onRowDragEnter", e);
+  }
+  
+  function onRowDragEnd(e) {
+    console.log("onRowDragEnd", e);
+  }
+  
+//   function onRowDragMove(e) {
+//     console.log("onRowDragMove", e);
+//   }
+  
+  function onRowDragLeave(e) {
+    console.log("onRowDragLeave", e);
+  }
 
 // listen for change on sort changed
 function onSortChanged() {
@@ -73,7 +144,7 @@ function getRowId(params) {
 }
 
 function onRowDragMove(event) {
-    console.log(event);
+//    console.log(event);
   var movingNode = event.node;
   var overNode = event.overNode;
 
