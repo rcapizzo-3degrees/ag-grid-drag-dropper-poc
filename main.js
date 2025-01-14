@@ -2,6 +2,10 @@ var immutableStore = getData();
 // test github action
 let gridApi;
 
+let myvar = 1;
+x = x++;
+console.log(x);
+
 window.addEventListener('storage', () => {
   
   const item = window.localStorage.getItem('ITEM');
