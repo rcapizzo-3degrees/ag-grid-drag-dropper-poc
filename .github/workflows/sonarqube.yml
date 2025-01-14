@@ -23,7 +23,7 @@ jobs:
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
-        projectBaseDir: app/src
+        projectBaseDir: .
         args: >
           -Dsonar.organization=rcapizzo-3degrees
           -Dsonar.projectKey=rcapizzo-3degrees_ag-grid-drag-dropper-poc
